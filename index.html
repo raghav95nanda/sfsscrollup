@@ -70,7 +70,7 @@
   <div class="wrap">
     <div class="hero">
       <h1 style="margin: 0 0 8px;">Scroll down and click the character</h1>
-      <p style="margin: 0; opacity: 0.8;">Dummy orange blocks below so there’s plenty to scroll.</p>
+      <p style="margin: 0; opacity: 0.8;">Ladder + character scale to the top of the screen.</p>
     </div>
 
     <div class="blocks" aria-hidden="true">
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Lottie (no integrity to avoid SRI blocking on Pages) -->
+  <!-- Lottie -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" crossorigin="anonymous"></script>
 
   <script>
@@ -103,33 +103,29 @@
       rightPx: 18,
       bottomPx: 18,
 
-      // Overall widget scale (scales both ladder and character together)
-      rigScale: 0.55,
+      // Overall rig scale (leave at 1 if you want pure viewport sizing)
+      rigScale: 1,
 
-      // Character size
-      charBaseSizePx: 160,
+      // “Reach the top” controls
+      topPaddingPx: 16,                 // how close ladder/character get to top
+      ladderViewportHeightRatio: 1.0,   // 1.0 = ladder tries to span full viewport height
+      charViewportHeightRatio: 0.14,    // character button height as % of viewport (e.g. 0.14 = 14% of screen height)
 
-      // Ladder sizing (extra control so you can shrink ladder without shrinking character)
-      ladderWidthPx: 200,      // <-- smaller default than before
-      ladderScale: 0.3,       // <-- extra shrink
-      ladderRightOffsetPx: 8,  // tweak alignment
+      // Ladder alignment relative to bottom-right anchor
+      ladderRightOffsetPx: 8,
       ladderBottomOffsetPx: 0,
 
       // Timing
       ladderSlideInMs: 400,
-      climbDurationMs: 3000,   // page scroll duration too
-      floatDownMs: 2600,       // slow float down duration
+      climbDurationMs: 3000,
+      floatDownMs: 2600,
       settleMs: 180,
 
-      // Motion distance (visual)
-      climbRisePx: 320,
-
-      // Lottie assets
+      // Lottie assets (same folder)
       lottieIdlePath: "Idle.json",
       lottieClimbPath: "Climbing.json",
       lottieJumpPath: "Jump.json",
 
-      // Behavior
       disableWhileRunning: true,
     };
 
@@ -158,7 +154,7 @@
 
     /**
      * ========================
-     * DOM + layout
+     * DOM + responsive sizing
      * ========================
      */
     const rig = document.getElementById("rig");
@@ -166,56 +162,67 @@
     const charBtn = document.getElementById("charBtn");
     const lottieHost = document.getElementById("lottieHost");
 
-    function applyLayout() {
+    // Computed at runtime
+    let climbRisePx = 260;
+
+    function computeResponsiveSizing() {
+      const vh = window.innerHeight;
+
       rig.style.right = `${CONFIG.rightPx}px`;
       rig.style.bottom = `${CONFIG.bottomPx}px`;
       rig.style.transform = `scale(${CONFIG.rigScale})`;
 
-      charBtn.style.width = `${CONFIG.charBaseSizePx}px`;
-      charBtn.style.height = `${CONFIG.charBaseSizePx}px`;
+      // 1) Character size: based on viewport height
+      const charSize = Math.max(72, Math.round(vh * CONFIG.charViewportHeightRatio));
+      charBtn.style.width = `${charSize}px`;
+      charBtn.style.height = `${charSize}px`;
 
-      ladder.style.width = `${CONFIG.ladderWidthPx}px`;
+      // 2) Ladder height: reach top of viewport (minus padding)
+      // Target height spans from bottom padding up to topPadding
+      const targetLadderHeight = Math.max(
+        180,
+        Math.round((vh - CONFIG.topPaddingPx) * CONFIG.ladderViewportHeightRatio)
+      );
+
+      // For SVGs, setting height is usually the cleanest: width auto.
+      ladder.style.height = `${targetLadderHeight}px`;
+      ladder.style.width = "auto";
+
       ladder.style.right = `${CONFIG.ladderRightOffsetPx}px`;
       ladder.style.bottom = `${CONFIG.ladderBottomOffsetPx}px`;
+
+      // 3) Climb distance: move character so its top approaches topPadding
+      // We want the character (button) to end near topPadding.
+      // Since the rig anchor is bottom-right, the translateY should be:
+      // -(viewportHeight - topPadding - charSize)
+      climbRisePx = Math.max(0, (vh - CONFIG.topPaddingPx - charSize));
+
+      // Reset transforms so layout changes don’t leave it mid-animation
+      if (!running) resetTransforms();
     }
-    applyLayout();
-    window.addEventListener("resize", applyLayout);
+
+    window.addEventListener("resize", computeResponsiveSizing);
+    window.addEventListener("orientationchange", computeResponsiveSizing);
 
     /**
      * ========================
-     * Lottie loading
+     * Lottie
      * ========================
      */
     let anim = null;
 
     function loadLottie(path, { loop = true, autoplay = true } = {}) {
-      if (anim) {
-        try { anim.destroy(); } catch(e) {}
-        anim = null;
-      }
-      anim = lottie.loadAnimation({
-        container: lottieHost,
-        renderer: "svg",
-        loop,
-        autoplay,
-        path,
-      });
+      if (anim) { try { anim.destroy(); } catch(e) {} anim = null; }
+      anim = lottie.loadAnimation({ container: lottieHost, renderer: "svg", loop, autoplay, path });
       return anim;
     }
-
     function forcePlayFromStart(a) {
-      try {
-        a.stop();
-        a.goToAndPlay(0, true);
-      } catch(e) {}
+      try { a.stop(); a.goToAndPlay(0, true); } catch(e) {}
     }
-
-    // Start idle
-    loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
 
     /**
      * ========================
-     * Motion / sequence
+     * Sequence
      * ========================
      */
     let running = false;
@@ -230,33 +237,31 @@
     function resetTransforms() {
       charBtn.style.transform = "translate3d(0,0,0)";
       ladder.style.opacity = "0";
-      ladder.style.transform = `translate3d(120%,0,0) scale(${CONFIG.ladderScale})`;
+      ladder.style.transform = `translate3d(120%,0,0)`; // off to right
     }
-    resetTransforms();
 
     function ladderSlideIn(cb) {
       ladder.style.opacity = "1";
       rafTween(CONFIG.ladderSlideInMs, (t) => {
-        const x = (1 - easeOutCubic(t)) * 120; // %
-        ladder.style.transform = `translate3d(${x}%,0,0) scale(${CONFIG.ladderScale})`;
+        const x = (1 - easeOutCubic(t)) * 120;
+        ladder.style.transform = `translate3d(${x}%,0,0)`;
       }, cb);
     }
 
-    // slide out but allow us to drive it in-parallel (we expose progress control)
     function ladderSetSlideOutProgress(t) {
       const x = easeInOutCubic(t) * 120;
-      ladder.style.transform = `translate3d(${x}%,0,0) scale(${CONFIG.ladderScale})`;
+      ladder.style.transform = `translate3d(${x}%,0,0)`;
       ladder.style.opacity = `${1 - t}`;
     }
 
     function climbAndScrollToTop(cb) {
       const startScroll = getScrollTop();
-      const rise = CONFIG.climbRisePx;
+      const rise = climbRisePx;
 
       rafTween(CONFIG.climbDurationMs, (t) => {
         const eased = easeInOutCubic(t);
 
-        // visual climb
+        // character climb to top of viewport
         const y = -rise * eased;
         charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
 
@@ -267,22 +272,18 @@
     }
 
     function floatDownWithLadderOut(cb) {
-      const rise = CONFIG.climbRisePx;
+      const rise = climbRisePx;
 
-      // Run BOTH:
-      // - character descends
-      // - ladder slides out to right
       rafTween(CONFIG.floatDownMs, (t) => {
         const eased = easeOutCubic(t);
 
-        // character floats down
+        // float down to idle
         const y = -rise * (1 - eased);
         charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
 
-        // ladder exits during the descent
+        // ladder exits during descent
         ladderSetSlideOutProgress(t);
       }, () => {
-        // settle to exact idle position
         rafTween(CONFIG.settleMs, (t) => {
           const eased = easeOutCubic(t);
           const y = 5 * (1 - eased);
@@ -300,18 +301,18 @@
       setRunning(true);
 
       ladderSlideIn(() => {
-        // CLIMB
+        // climb anim
         const climbAnim = loadLottie(CONFIG.lottieClimbPath, { loop: true, autoplay: true });
         forcePlayFromStart(climbAnim);
 
         climbAndScrollToTop(() => {
-          // SWITCH to JUMP
+          // switch to jump anim
           const jumpAnim = loadLottie(CONFIG.lottieJumpPath, { loop: false, autoplay: true });
           forcePlayFromStart(jumpAnim);
 
-          // FLOAT DOWN while ladder exits right
+          // float down + ladder out
           floatDownWithLadderOut(() => {
-            // back to IDLE
+            // back to idle
             const idleAnim = loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
             forcePlayFromStart(idleAnim);
 
@@ -325,7 +326,10 @@
     charBtn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); runSequence(); }
     });
+
+    // Init
+    loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
+    computeResponsiveSizing();
   </script>
 </body>
 </html>
-
