@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scroll to Top Ladder Lottie</title>
+
+  <style>
+    :root{
+      --bg: #ffffff;
+      --ink: #111;
+      --orange: #f57c00;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* Dummy content to scroll */
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 16px 200px;
+    }
+    .hero {
+      padding: 28px;
+      border-radius: 18px;
+      background: #fff3e6;
+      border: 2px solid rgba(245,124,0,0.25);
+      margin-bottom: 24px;
+    }
+    .blocks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .block {
+      height: 260px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(245,124,0,0.95), rgba(245,124,0,0.55));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    @media (max-width: 720px) {
+      .blocks { grid-template-columns: 1fr; }
+    }
+
+    /* Scroll widget layer */
+    .scroll-widget {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none; /* enable only on the button itself */
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    .rig {
+      position: absolute;
+      transform-origin: bottom right;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    /* Ladder */
+    .ladder {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      transform-origin: bottom right;
+      will-change: transform, opacity;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.10));
+    }
+
+    /* Character button (clickable) */
+    .char-btn {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 120px; /* overridden by JS scale */
+      height: 120px;
+      cursor: pointer;
+      pointer-events: auto;
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      border-radius: 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .char-btn:focus-visible {
+      outline: 3px solid rgba(245,124,0,0.55);
+      outline-offset: 6px;
+    }
+
+    .lottie {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Optional: a tiny hint label (disabled by default) */
+    .hint {
+      position: absolute;
+      right: 10px;
+      bottom: 128px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 999px;
+      padding: 6px 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+      pointer-events: none;
+      opacity: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1 style="margin: 0 0 8px;">Scroll down, then click the character →</h1>
+      <p style="margin: 0; opacity: 0.8;">
+        Dummy orange blocks below so there’s plenty to scroll. The widget sits bottom-right.
+      </p>
+    </div>
+
+    <div class="blocks" aria-hidden="true">
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+      <div class="block"></div>
+    </div>
+  </div>
+
+  <!-- Fixed widget -->
+  <div class="scroll-widget" aria-hidden="false">
+    <div id="rig" class="rig">
+      <img id="ladder" class="ladder" src="Ladder.svg" alt="" />
+      <div class="hint" id="hint">Back to top</div>
+
+      <button id="charBtn" class="char-btn" type="button" aria-label="Scroll to top">
+        <div id="lottieHost" class="lottie"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Lottie Web (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" integrity="sha512-8Qz9o2cFPOw+9w8p7Wj3x0QZx7w+JgkYqJf0Ww+e+gQZpV9cY3G5iQ9d9QxH0wqWzvH3mYV8g5u4kCkq5f9ZqQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    /**
+     * ========= EASY TUNING =========
+     * You can adjust these without touching the rest of the logic.
+     */
+    const CONFIG = {
+      // Placement
+      rightPx: 18,                 // distance from right edge
+      bottomPx: 18,                // distance from bottom edge
+
+      // Scale / sizing (overall rig)
+      scale: 0.55,                 // overall widget scale
+      charBaseSizePx: 160,         // base button size before scale
+
+      // Ladder sizing & position relative to character
+      ladderWidthPx: 260,          // base ladder width before scale
+      ladderRightOffsetPx: 10,     // nudge ladder relative to rig origin
+      ladderBottomOffsetPx: 0,
+
+      // Motion timing
+      ladderSlideInMs: 450,        // ladder slides in from right
+      climbDurationMs: 3000,       // character climb + page scroll duration
+      jumpPlayOnce: true,          // jump lottie play once (recommended)
+      floatDownMs: 2600,           // slow float down duration
+      settleMs: 250,               // tiny settle at end
+
+      // Motion distance (visual only)
+      climbRisePx: 340,            // how far the character moves up during climb (before scale)
+
+      // Lottie files (must exist in same folder on GitHub Pages)
+      lottieIdlePath: "Idle.json",
+      lottieClimbPath: "Climbing.json",
+      lottieJumpPath: "Jump.json",
+
+      // Behavior
+      disableWhileRunning: true,
+      prefersReducedMotionRespects: true,
+    };
+
+    /**
+     * ========= Helpers =========
+     */
+    const clamp01 = (t) => Math.max(0, Math.min(1, t));
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    const easeInOutCubic = (t) => (t < 0.5) ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    function rafTween(durationMs, onUpdate, onDone, easing = (t) => t) {
+      const start = performance.now();
+      function tick(now) {
+        const t = clamp01((now - start) / durationMs);
+        onUpdate(easing(t));
+        if (t < 1) requestAnimationFrame(tick);
+        else onDone && onDone();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function getScrollTop() {
+      return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+
+    function setScrollTop(y) {
+      window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    }
+
+    function reduceMotionOn() {
+      if (!CONFIG.prefersReducedMotionRespects) return false;
+      return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+
+    /**
+     * ========= Widget setup =========
+     */
+    const rig = document.getElementById("rig");
+    const ladder = document.getElementById("ladder");
+    const charBtn = document.getElementById("charBtn");
+    const lottieHost = document.getElementById("lottieHost");
+
+    // Apply position + scale
+    function applyLayout() {
+      rig.style.right = `${CONFIG.rightPx}px`;
+      rig.style.bottom = `${CONFIG.bottomPx}px`;
+      rig.style.transform = `scale(${CONFIG.scale})`;
+
+      charBtn.style.width = `${CONFIG.charBaseSizePx}px`;
+      charBtn.style.height = `${CONFIG.charBaseSizePx}px`;
+
+      ladder.style.width = `${CONFIG.ladderWidthPx}px`;
+      ladder.style.right = `${CONFIG.ladderRightOffsetPx}px`;
+      ladder.style.bottom = `${CONFIG.ladderBottomOffsetPx}px`;
+    }
+    applyLayout();
+    window.addEventListener("resize", applyLayout);
+
+    // Lottie instances
+    let anim = null;
+
+    function loadLottie(path, { loop = true, autoplay = true } = {}) {
+      if (anim) {
+        try { anim.destroy(); } catch(e) {}
+        anim = null;
+      }
+      anim = lottie.loadAnimation({
+        container: lottieHost,
+        renderer: "svg",
+        loop,
+        autoplay,
+        path,
+      });
+      return anim;
+    }
+
+    // Start in idle
+    loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
+
+    /**
+     * ========= State machine =========
+     */
+    let running = false;
+
+    function setRunning(val) {
+      running = val;
+      if (CONFIG.disableWhileRunning) {
+        charBtn.disabled = val;
+        charBtn.style.cursor = val ? "default" : "pointer";
+        charBtn.style.opacity = val ? "0.95" : "1";
+      }
+    }
+
+    function resetRigTransforms() {
+      // Reset character and ladder transforms
+      charBtn.style.transform = "translate3d(0, 0, 0)";
+      ladder.style.transform = "translate3d(120%, 0, 0)"; // offscreen to right
+      ladder.style.opacity = "0";
+    }
+
+    resetRigTransforms();
+
+    function showLadderSlideIn(cb) {
+      ladder.style.opacity = "1";
+      // Animate from offscreen to visible
+      rafTween(CONFIG.ladderSlideInMs, (t) => {
+        const x = (1 - easeOutCubic(t)) * 120; // percent
+        ladder.style.transform = `translate3d(${x}%, 0, 0)`;
+      }, cb);
+    }
+
+    function hideLadderSlideOut(cb) {
+      rafTween(CONFIG.ladderSlideInMs, (t) => {
+        const x = easeInOutCubic(t) * 120;
+        ladder.style.transform = `translate3d(${x}%, 0, 0)`;
+        ladder.style.opacity = `${1 - t}`;
+      }, () => {
+        ladder.style.opacity = "0";
+        cb && cb();
+      });
+    }
+
+    function climbAndScrollToTop(cb) {
+      const startScroll = getScrollTop();
+      const rise = CONFIG.climbRisePx; // visual distance
+      const duration = reduceMotionOn() ? Math.min(800, CONFIG.climbDurationMs) : CONFIG.climbDurationMs;
+
+      rafTween(duration, (t) => {
+        // Character moves up as page scrolls up
+        const eased = easeInOutCubic(t);
+
+        const y = -rise * eased;
+        charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+
+        const scrollY = startScroll * (1 - eased);
+        setScrollTop(scrollY);
+      }, cb);
+    }
+
+    function floatDown(cb) {
+      const rise = CONFIG.climbRisePx;
+      const duration = reduceMotionOn() ? Math.min(800, CONFIG.floatDownMs) : CONFIG.floatDownMs;
+
+      rafTween(duration, (t) => {
+        const eased = easeOutCubic(t);
+        const y = -rise * (1 - eased);
+        charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+      }, () => {
+        // tiny settle
+        rafTween(reduceMotionOn() ? 0 : CONFIG.settleMs, (t) => {
+          const eased = easeOutCubic(t);
+          const y = 6 * (1 - eased);
+          charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+        }, () => {
+          charBtn.style.transform = "translate3d(0, 0, 0)";
+          cb && cb();
+        });
+      });
+    }
+
+    async function runSequence() {
+      if (running) return;
+      setRunning(true);
+
+      // If already at top, still play ladder/anim for fun (and consistent UX)
+      showLadderSlideIn(() => {
+        // Switch to climbing animation (loop)
+        loadLottie(CONFIG.lottieClimbPath, { loop: true, autoplay: true });
+
+        climbAndScrollToTop(() => {
+          // Switch to jump
+          const jumpLoop = CONFIG.jumpPlayOnce ? false : true;
+          const jumpAnim = loadLottie(CONFIG.lottieJumpPath, { loop: jumpLoop, autoplay: true });
+
+          // If play-once, ensure it starts at beginning
+          try { jumpAnim.goToAndPlay(0, true); } catch(e) {}
+
+          floatDown(() => {
+            // Back to idle
+            loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
+
+            hideLadderSlideOut(() => {
+              setRunning(false);
+            });
+          });
+        });
+      });
+    }
+
+    // Click + keyboard
+    charBtn.addEventListener("click", runSequence);
+    charBtn.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        runSequence();
+      }
+    });
+
+    // Optional: only show widget after scrolling a bit (comment out if you want always visible)
+    function updateVisibility() {
+      const y = getScrollTop();
+      // Fade in after 200px scroll
+      const shown = y > 200;
+      rig.style.opacity = shown ? "1" : "0.0";
+      rig.style.transition = "opacity 180ms ease";
+      rig.style.pointerEvents = shown ? "none" : "none"; // button still handles pointer events
+      charBtn.style.pointerEvents = shown ? "auto" : "none";
+    }
+    updateVisibility();
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+  </script>
+</body>
+</html>
