@@ -111,6 +111,9 @@
       charMinPx: 64,
       charMaxPx: 180,
 
+      charOffsetXPx: 10, // move character 10px to the right
+
+
       // Ladder sizing (width-driven first)
       ladderWidthVwRatio: 0.01,   // ladder width = 18% of viewport width
       ladderWidthMinPx: 40,
@@ -267,7 +270,7 @@
      * =========================
      */
     function resetTransforms() {
-      charBtn.style.transform = "translate3d(0,0,0)";
+      charBtn.style.transform = `translate3d(${CONFIG.charOffsetXPx}px, 0, 0)`;
       ladder.style.opacity = "0";
       ladder.style.transform = "translate3d(120%,0,0)"; // offscreen right
     }
@@ -300,7 +303,7 @@
       rafTween(CONFIG.climbDurationMs, (t) => {
         const eased = easeInOutCubic(t); // climb can be eased; you didn't object to climb easing
         const y = -rise * eased;
-        charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+        charBtn.style.transform = `translate3d(${CONFIG.charOffsetXPx}px, ${y}px, 0)`;
 
         const scrollY = startScroll * (1 - eased);
         setScrollTop(scrollY);
@@ -322,7 +325,7 @@
         if (CONFIG.settleMs > 0) {
           rafTween(CONFIG.settleMs, (tt) => {
             const y = 3 * (1 - tt);
-            charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+            charBtn.style.transform = `translate3d(${CONFIG.charOffsetXPx}px, ${y}px, 0)`;
           }, () => {
             charBtn.style.transform = "translate3d(0,0,0)";
             ladder.style.opacity = "0";
@@ -381,6 +384,7 @@
   </script>
 </body>
 </html>
+
 
 
 
