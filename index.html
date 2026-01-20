@@ -2,75 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scroll to Top Ladder Lottie</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lottie Ladder Scroll-To-Top</title>
 
   <style>
-    html, body { height: 100%; margin: 0; background: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    html, body { height:100%; margin:0; background:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
 
-    /* Dummy content */
-    .wrap { max-width: 980px; margin: 0 auto; padding: 32px 16px 220px; }
-    .hero { padding: 28px; border-radius: 18px; background: #fff3e6; border: 2px solid rgba(245,124,0,0.25); margin-bottom: 24px; }
-    .blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-    .block { height: 260px; border-radius: 18px; background: linear-gradient(135deg, rgba(245,124,0,0.95), rgba(245,124,0,0.55)); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
-    @media (max-width: 720px) { .blocks { grid-template-columns: 1fr; } }
+    /* Dummy content so there's something to scroll */
+    .wrap { max-width:980px; margin:0 auto; padding:32px 16px 240px; }
+    .hero { padding:28px; border-radius:18px; background:#fff3e6; border:2px solid rgba(245,124,0,.25); margin-bottom:24px; }
+    .blocks { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .block { height:260px; border-radius:18px; background:linear-gradient(135deg, rgba(245,124,0,.95), rgba(245,124,0,.55)); box-shadow:0 10px 30px rgba(0,0,0,.06); }
+    @media (max-width:720px){ .blocks{ grid-template-columns:1fr; } }
 
-    /* Widget */
-    .scroll-widget {
-      position: fixed;
-      z-index: 9999;
-      right: 0; bottom: 0;
-      width: 1px; height: 1px;
-      pointer-events: none;
+    /* Fixed widget layer */
+    .scroll-widget{
+      position:fixed; z-index:9999; right:0; bottom:0;
+      width:1px; height:1px;
+      pointer-events:none;
     }
 
-    #rig {
-      position: absolute;
-      right: 0; bottom: 0;
-      transform-origin: bottom right;
-      will-change: transform;
-      pointer-events: none;
-      opacity: 1; /* always visible */
+    #rig{
+      position:absolute; right:0; bottom:0;
+      transform-origin:bottom right;
+      will-change:transform;
+      pointer-events:none;
+      opacity:1;
     }
 
-    #ladder {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      transform-origin: bottom right;
-      will-change: transform, opacity;
-      opacity: 0;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.10));
+    #ladder{
+      position:absolute;
+      right:0; bottom:0;
+      transform-origin:bottom right;
+      will-change:transform,opacity;
+      opacity:0;
+      pointer-events:none;
+      user-select:none;
+      -webkit-user-drag:none;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.10));
     }
 
-    #charBtn {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      border: none;
-      background: transparent;
-      padding: 0; margin: 0;
-      cursor: pointer;
-      pointer-events: auto;
-      transform-origin: bottom right;
-      will-change: transform;
-      border-radius: 16px;
-      -webkit-tap-highlight-color: transparent;
+    #charBtn{
+      position:absolute;
+      right:0; bottom:0;
+      border:none;
+      background:transparent;
+      padding:0; margin:0;
+      cursor:pointer;
+      pointer-events:auto;
+      transform-origin:bottom right;
+      will-change:transform;
+      border-radius:16px;
+      -webkit-tap-highlight-color:transparent;
     }
-    #charBtn:focus-visible { outline: 3px solid rgba(245,124,0,0.55); outline-offset: 6px; }
+    #charBtn:focus-visible{ outline:3px solid rgba(245,124,0,.55); outline-offset:6px; }
 
-    #lottieHost { width: 100%; height: 100%; }
+    #lottieHost{ width:100%; height:100%; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <div class="hero">
-      <h1 style="margin: 0 0 8px;">Scroll down and click the character</h1>
-      <p style="margin: 0; opacity: 0.8;">Ladder + character scale to the top of the screen.</p>
+      <h1 style="margin:0 0 8px;">Scroll down, click the character →</h1>
+      <p style="margin:0; opacity:.8;">Ladder and character scale responsively. Climb scrolls to top, then jump + linear float down.</p>
     </div>
 
     <div class="blocks" aria-hidden="true">
@@ -82,6 +77,7 @@
 
   <div class="scroll-widget">
     <div id="rig">
+      <!-- Updated ladder filename -->
       <img id="ladder" src="Ladder2.svg" alt="" />
       <button id="charBtn" type="button" aria-label="Scroll to top">
         <div id="lottieHost"></div>
@@ -89,50 +85,64 @@
     </div>
   </div>
 
-  <!-- Lottie -->
+  <!-- Lottie Web (no integrity to avoid SRI blocking on GitHub Pages) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" crossorigin="anonymous"></script>
 
   <script>
     /**
-     * ========================
+     * =========================
      * EASY TUNING VARIABLES
-     * ========================
+     * =========================
      */
     const CONFIG = {
       // Placement
       rightPx: 18,
       bottomPx: 18,
 
-      // Overall rig scale (leave at 1 if you want pure viewport sizing)
-      rigScale: 1,
+      // Top reach target (how close to the top the ladder/character should get)
+      topPaddingPx: 16,
 
-      // “Reach the top” controls
-      topPaddingPx: 16,                 // how close ladder/character get to top
-      ladderViewportHeightRatio: 1.0,   // 1.0 = ladder tries to span full viewport height
-      charViewportHeightRatio: 0.14,    // character button height as % of viewport (e.g. 0.14 = 14% of screen height)
+      // Responsive breakpoints
+      mobileBreakpointPx: 520,
 
-      // Ladder alignment relative to bottom-right anchor
+      // Character sizing (based on viewport height)
+      charViewportHeightRatio: 0.14, // 14% of viewport height
+      charMobileScale: 0.78,         // extra scale-down on mobile
+      charMinPx: 64,
+      charMaxPx: 180,
+
+      // Ladder sizing (width-driven first)
+      ladderWidthVwRatio: 0.18,   // ladder width = 18% of viewport width
+      ladderWidthMinPx: 110,
+      ladderWidthMaxPx: 280,
+      ladderMobileScale: 0.72,    // extra scale-down on mobile (width-driven)
+
+      // Keep “reaches top” behavior even when width sizing makes ladder too short:
+      ladderMustReachTop: true,
+
+      // Offsets to align ladder with character
       ladderRightOffsetPx: 8,
       ladderBottomOffsetPx: 0,
 
       // Timing
       ladderSlideInMs: 400,
-      climbDurationMs: 3000,
-      floatDownMs: 3600,
-      settleMs: 180,
+      climbDurationMs: 3000, // character climb + page scroll duration
+      floatDownMs: 2600,     // linear float down duration
+      settleMs: 0,           // keep 0 if you truly want no easing/settle at end
 
-      // Lottie assets (same folder)
+      // Assets
       lottieIdlePath: "Idle.json",
       lottieClimbPath: "Climbing.json",
       lottieJumpPath: "Jump.json",
 
+      // Behavior
       disableWhileRunning: true,
     };
 
     /**
-     * ========================
+     * =========================
      * Helpers
-     * ========================
+     * =========================
      */
     const clamp01 = (t) => Math.max(0, Math.min(1, t));
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -153,79 +163,18 @@
     const setScrollTop = (y) => window.scrollTo({ top: y, left: 0, behavior: "auto" });
 
     /**
-     * ========================
-     * DOM + responsive sizing
-     * ========================
+     * =========================
+     * DOM + state
+     * =========================
      */
     const rig = document.getElementById("rig");
     const ladder = document.getElementById("ladder");
     const charBtn = document.getElementById("charBtn");
     const lottieHost = document.getElementById("lottieHost");
 
-    // Computed at runtime
-    let climbRisePx = 260;
-
-    function computeResponsiveSizing() {
-      const vh = window.innerHeight;
-
-      rig.style.right = `${CONFIG.rightPx}px`;
-      rig.style.bottom = `${CONFIG.bottomPx}px`;
-      rig.style.transform = `scale(${CONFIG.rigScale})`;
-
-      // 1) Character size: based on viewport height
-      const charSize = Math.max(72, Math.round(vh * CONFIG.charViewportHeightRatio));
-      charBtn.style.width = `${charSize}px`;
-      charBtn.style.height = `${charSize}px`;
-
-      // 2) Ladder height: reach top of viewport (minus padding)
-      // Target height spans from bottom padding up to topPadding
-      const targetLadderHeight = Math.max(
-        180,
-        Math.round((vh - CONFIG.topPaddingPx) * CONFIG.ladderViewportHeightRatio)
-      );
-
-      // For SVGs, setting height is usually the cleanest: width auto.
-      ladder.style.height = `${targetLadderHeight}px`;
-      ladder.style.width = "auto";
-
-      ladder.style.right = `${CONFIG.ladderRightOffsetPx}px`;
-      ladder.style.bottom = `${CONFIG.ladderBottomOffsetPx}px`;
-
-      // 3) Climb distance: move character so its top approaches topPadding
-      // We want the character (button) to end near topPadding.
-      // Since the rig anchor is bottom-right, the translateY should be:
-      // -(viewportHeight - topPadding - charSize)
-      climbRisePx = Math.max(0, (vh - CONFIG.topPaddingPx - charSize));
-
-      // Reset transforms so layout changes don’t leave it mid-animation
-      if (!running) resetTransforms();
-    }
-
-    window.addEventListener("resize", computeResponsiveSizing);
-    window.addEventListener("orientationchange", computeResponsiveSizing);
-
-    /**
-     * ========================
-     * Lottie
-     * ========================
-     */
-    let anim = null;
-
-    function loadLottie(path, { loop = true, autoplay = true } = {}) {
-      if (anim) { try { anim.destroy(); } catch(e) {} anim = null; }
-      anim = lottie.loadAnimation({ container: lottieHost, renderer: "svg", loop, autoplay, path });
-      return anim;
-    }
-    function forcePlayFromStart(a) {
-      try { a.stop(); a.goToAndPlay(0, true); } catch(e) {}
-    }
-
-    /**
-     * ========================
-     * Sequence
-     * ========================
-     */
     let running = false;
+    let climbRisePx = 260; // computed responsively
+
     function setRunning(v) {
       running = v;
       if (CONFIG.disableWhileRunning) {
@@ -234,83 +183,181 @@
       }
     }
 
+    /**
+     * =========================
+     * Responsive sizing
+     * - Ladder: width responsive (vw ratio), scaled down on mobile
+     * - Character: vh responsive, scaled down on mobile
+     * - Climb distance: reaches near topPadding
+     * - Optional: ladder fallback to reach top if width sizing is too short
+     * =========================
+     */
+    function computeResponsiveSizing() {
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      const isMobile = vw <= CONFIG.mobileBreakpointPx;
+
+      rig.style.right = `${CONFIG.rightPx}px`;
+      rig.style.bottom = `${CONFIG.bottomPx}px`;
+
+      // Character size (vh-based) + extra mobile scale
+      let charSize = vh * CONFIG.charViewportHeightRatio * (isMobile ? CONFIG.charMobileScale : 1);
+      charSize = Math.round(Math.max(CONFIG.charMinPx, Math.min(CONFIG.charMaxPx, charSize)));
+      charBtn.style.width = `${charSize}px`;
+      charBtn.style.height = `${charSize}px`;
+
+      // Ladder width (vw-based) + extra mobile scale
+      let ladderWidth = vw * CONFIG.ladderWidthVwRatio * (isMobile ? CONFIG.ladderMobileScale : 1);
+      ladderWidth = Math.round(Math.max(CONFIG.ladderWidthMinPx, Math.min(CONFIG.ladderWidthMaxPx, ladderWidth)));
+
+      ladder.style.right = `${CONFIG.ladderRightOffsetPx}px`;
+      ladder.style.bottom = `${CONFIG.ladderBottomOffsetPx}px`;
+
+      ladder.style.width = `${ladderWidth}px`;
+      ladder.style.height = "auto";
+
+      // Climb rise to near top padding (visual + used by motion)
+      climbRisePx = Math.max(0, (vh - CONFIG.topPaddingPx - charSize));
+
+      // If ladder must reach top, but width sizing made it too short, fallback to height-based.
+      if (CONFIG.ladderMustReachTop) {
+        requestAnimationFrame(() => {
+          const targetHeight = Math.max(180, vh - CONFIG.topPaddingPx);
+          const rect = ladder.getBoundingClientRect();
+          if (rect.height && rect.height < targetHeight - 2) {
+            ladder.style.height = `${Math.round(targetHeight)}px`;
+            ladder.style.width = "auto";
+          }
+          if (!running) resetTransforms();
+        });
+      } else {
+        if (!running) resetTransforms();
+      }
+    }
+
+    window.addEventListener("resize", computeResponsiveSizing);
+    window.addEventListener("orientationchange", computeResponsiveSizing);
+
+    /**
+     * =========================
+     * Lottie loading
+     * =========================
+     */
+    let anim = null;
+
+    function loadLottie(path, { loop = true, autoplay = true } = {}) {
+      if (anim) { try { anim.destroy(); } catch(e) {} anim = null; }
+      anim = lottie.loadAnimation({
+        container: lottieHost,
+        renderer: "svg",
+        loop,
+        autoplay,
+        path,
+      });
+      return anim;
+    }
+
+    function forcePlayFromStart(a) {
+      try { a.stop(); a.goToAndPlay(0, true); } catch(e) {}
+    }
+
+    /**
+     * =========================
+     * Ladder transforms
+     * =========================
+     */
     function resetTransforms() {
       charBtn.style.transform = "translate3d(0,0,0)";
       ladder.style.opacity = "0";
-      ladder.style.transform = `translate3d(120%,0,0)`; // off to right
+      ladder.style.transform = "translate3d(120%,0,0)"; // offscreen right
     }
 
     function ladderSlideIn(cb) {
       ladder.style.opacity = "1";
       rafTween(CONFIG.ladderSlideInMs, (t) => {
-        const x = (1 - easeOutCubic(t)) * 120;
+        const x = (1 - easeOutCubic(t)) * 120; // %
         ladder.style.transform = `translate3d(${x}%,0,0)`;
       }, cb);
     }
 
+    // Ladder slide-out progress (used during float down)
     function ladderSetSlideOutProgress(t) {
+      // You can make ladder linear too by removing easeInOutCubic below.
       const x = easeInOutCubic(t) * 120;
       ladder.style.transform = `translate3d(${x}%,0,0)`;
       ladder.style.opacity = `${1 - t}`;
     }
 
+    /**
+     * =========================
+     * Motion: climb (scroll) -> jump -> linear float down + ladder out
+     * =========================
+     */
     function climbAndScrollToTop(cb) {
       const startScroll = getScrollTop();
       const rise = climbRisePx;
 
       rafTween(CONFIG.climbDurationMs, (t) => {
-        const eased = easeInOutCubic(t);
-
-        // character climb to top of viewport
+        const eased = easeInOutCubic(t); // climb can be eased; you didn't object to climb easing
         const y = -rise * eased;
         charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
 
-        // scroll up synced
         const scrollY = startScroll * (1 - eased);
         setScrollTop(scrollY);
       }, cb);
     }
 
-function floatDownWithLadderOut(cb) {
-  const rise = climbRisePx;
+    function floatDownLinearWithLadderOut(cb) {
+      const rise = climbRisePx;
 
-  rafTween(CONFIG.floatDownMs, (t) => {
-    // LINEAR float (no easing)
-    const y = -rise * (1 - t);
-    charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+      rafTween(CONFIG.floatDownMs, (t) => {
+        // LINEAR descent (no easing)
+        const y = -rise * (1 - t);
+        charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
 
-    // ladder exits during descent (can still be eased if you like)
-    ladderSetSlideOutProgress(t);
-  }, () => {
-    rafTween(CONFIG.settleMs, (t) => {
-      const y = 5 * (1 - t);
-      charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
-    }, () => {
-      charBtn.style.transform = "translate3d(0,0,0)";
-      ladder.style.opacity = "0";
-      cb && cb();
-    });
-  });
-}
+        // Ladder goes back to the right while character floats down
+        ladderSetSlideOutProgress(t);
+      }, () => {
+        // Optional tiny settle (kept off by default)
+        if (CONFIG.settleMs > 0) {
+          rafTween(CONFIG.settleMs, (tt) => {
+            const y = 3 * (1 - tt);
+            charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+          }, () => {
+            charBtn.style.transform = "translate3d(0,0,0)";
+            ladder.style.opacity = "0";
+            cb && cb();
+          });
+        } else {
+          charBtn.style.transform = "translate3d(0,0,0)";
+          ladder.style.opacity = "0";
+          cb && cb();
+        }
+      });
+    }
 
-
+    /**
+     * =========================
+     * Sequence runner
+     * =========================
+     */
     async function runSequence() {
       if (running) return;
       setRunning(true);
 
       ladderSlideIn(() => {
-        // climb anim
+        // Switch to climbing (loop)
         const climbAnim = loadLottie(CONFIG.lottieClimbPath, { loop: true, autoplay: true });
         forcePlayFromStart(climbAnim);
 
         climbAndScrollToTop(() => {
-          // switch to jump anim
+          // Switch to jump (play once)
           const jumpAnim = loadLottie(CONFIG.lottieJumpPath, { loop: false, autoplay: true });
           forcePlayFromStart(jumpAnim);
 
-          // float down + ladder out
-          floatDownWithLadderOut(() => {
-            // back to idle
+          // Linear float down + ladder exits right
+          floatDownLinearWithLadderOut(() => {
+            // Back to idle
             const idleAnim = loadLottie(CONFIG.lottieIdlePath, { loop: true, autoplay: true });
             forcePlayFromStart(idleAnim);
 
@@ -322,7 +369,10 @@ function floatDownWithLadderOut(cb) {
 
     charBtn.addEventListener("click", runSequence);
     charBtn.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); runSequence(); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        runSequence();
+      }
     });
 
     // Init
@@ -331,6 +381,3 @@ function floatDownWithLadderOut(cb) {
   </script>
 </body>
 </html>
-
-
-
