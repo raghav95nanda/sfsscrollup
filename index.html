@@ -271,30 +271,28 @@
       }, cb);
     }
 
-    function floatDownWithLadderOut(cb) {
-      const rise = climbRisePx;
+function floatDownWithLadderOut(cb) {
+  const rise = climbRisePx;
 
-      rafTween(CONFIG.floatDownMs, (t) => {
-        const eased = easeOutCubic(t);
+  rafTween(CONFIG.floatDownMs, (t) => {
+    // LINEAR float (no easing)
+    const y = -rise * (1 - t);
+    charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
 
-        // float down to idle
-        const y = -rise * (1 - eased);
-        charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+    // ladder exits during descent (can still be eased if you like)
+    ladderSetSlideOutProgress(t);
+  }, () => {
+    rafTween(CONFIG.settleMs, (t) => {
+      const y = 5 * (1 - t);
+      charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
+    }, () => {
+      charBtn.style.transform = "translate3d(0,0,0)";
+      ladder.style.opacity = "0";
+      cb && cb();
+    });
+  });
+}
 
-        // ladder exits during descent
-        ladderSetSlideOutProgress(t);
-      }, () => {
-        rafTween(CONFIG.settleMs, (t) => {
-          const eased = easeOutCubic(t);
-          const y = 5 * (1 - eased);
-          charBtn.style.transform = `translate3d(0, ${y}px, 0)`;
-        }, () => {
-          charBtn.style.transform = "translate3d(0,0,0)";
-          ladder.style.opacity = "0";
-          cb && cb();
-        });
-      });
-    }
 
     async function runSequence() {
       if (running) return;
@@ -333,4 +331,5 @@
   </script>
 </body>
 </html>
+
 
